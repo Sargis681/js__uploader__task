@@ -13,7 +13,6 @@ fileSelector.onclick = () => fileSelectorInput.click();
 fileSelectorInput.onchange = () => {
   a +=1 
 
-
     const newFiles = [...fileSelectorInput.files];
     addFilesAndStartUpload(newFiles);
 };
