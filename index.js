@@ -12,15 +12,10 @@ fileSelector.onclick = () => fileSelectorInput.click();
 
 fileSelectorInput.onchange = () => {
   a +=1 
-  if(a>1){
-      const newFiles = [...fileSelectorInput.files];
-      fuTwo(newFiles)
 
-  }else{
 
     const newFiles = [...fileSelectorInput.files];
     addFilesAndStartUpload(newFiles);
-  }
 };
 function fuTwo(newFiles) {
   files = [...newFiles]
