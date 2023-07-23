@@ -69,14 +69,7 @@ function displayFiles() {
           </div>
           <div class="file-size">${(file.size / (1024 * 1024)).toFixed(2)} MB</div>
         </div>
-        <div class="col">
-          <svg xmlns="http://www.w3.org/2000/svg" class="cross" height="20" width="20">
-            <path d="m5.979 14.917-.854-.896 4-4.021-4-4.062.854-.896 4.042 4.062 4-4.062.854.896-4 4.062 4 4.021-.854.896-4-4.063Z"/>
-          </svg>
-          <svg xmlns="http://www.w3.org/2000/svg" class="tick" height="20" width="20">
-            <path d="m8.229 14.438-3.896-3.917 1.438-1.438 2.458 2.459 6-6L15.667 7Z"/>
-          </svg>
-        </div>
+       
       `;
       listContainer.appendChild(li);
     }
@@ -102,7 +95,7 @@ function uploadFilesInBatches() {
 
   function uploadBatch() {
     const start = currentBatch * batchSize;
-    const end = Math.min(start + batchSize, files.length);
+    const end = Math.min(start + batchSize);
     const batchFiles = files.slice(start, end);
     console.log("Batch", currentBatch + 1, "of", totalBatches);
 
@@ -127,9 +120,7 @@ function uploadFilesInBatches() {
           }
         }
 
-        if (!li) {
-          return;
-        }
+     
 
         li.classList.add("in-prog");
 
