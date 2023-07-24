@@ -1,113 +1,129 @@
-const dropArea = document.querySelector(".container__cart");
-const listSection = document.querySelector(".container__list-section");
-const listContainer = document.querySelector(".container__list");
-const fileSelector = document.querySelector(".container__coldrap-file-selector");
-const fileSelectorInput = document.querySelector(".container__coldrap-file-selector-input");
-let a = 0;
-let files = [];
-let uploadedFiles = [];
-let isUploading = false;
+// Make sure the DOM is ready before executing the code
+document.addEventListener("DOMContentLoaded", () => {
+  const dropArea = document.querySelector(".container__cart");
+  const listSection = document.querySelector(".container__list-section");
+  const listContainer = document.querySelector(".container__list");
+  const fileSelector = document.querySelector(
+    ".container__coldrap-file-selector"
+  );
+  const fileSelectorInput = document.querySelector(
+    ".container__coldrap-file-selector-input"
+  );
+  let a = 0;
+  let files = [];
+  let uploadedFiles = [];
+  let isUploading = false;
 
-fileSelector.onclick = () => fileSelectorInput.click();
+  fileSelector.onclick = () => fileSelectorInput.click();
 
-fileSelectorInput.onchange = () => {
-  a +=1 
-
+  fileSelectorInput.onchange = () => {
+    a += 1;
+    // if (a > 1) {
+    //   console.log("mtela");
+    //   currentBatch = uploadedFiles + 2;
+    //   console.log(currentBatch);
+    //   console.log(files + "this is files");
+    // }
     const newFiles = [...fileSelectorInput.files];
-    addFilesAndStartUpload(newFiles);
-};
-function fuTwo(newFiles) {
-  files = [...newFiles]
-  displayFiles();
-  
-}
+    files = [...newFiles];
+    displayFiles();
 
-dropArea.ondragover = (e) => {
-  e.preventDefault();
-  dropArea.classList.add("drag-over-effect");
-};
-
-dropArea.ondragleave = () => {
-  dropArea.classList.remove("drag-over-effect");
-};
-
-dropArea.ondragenter = (e) => {
-  e.preventDefault();
-  dropArea.classList.add("drag-over-effect");
-};
-
-dropArea.ondragend = () => {
-  dropArea.classList.remove("drag-over-effect");
-};
-
-dropArea.ondrop = (e) => {
-  e.preventDefault();
-  dropArea.classList.remove("drag-over-effect");
-
-  if (e.dataTransfer.items) {
-    const newFiles = [...e.dataTransfer.files].filter((file) => typeValidation(file.type));
-    addFilesAndStartUpload(newFiles);
-  }
-};
-
-function displayFiles() {
-  listSection.style.display = "block";
-
-  files.forEach((file) => {
-    if (!uploadedFiles.includes(file)) {
-      const li = document.createElement("li");
-      li.classList.add("in-prog");
-      li.innerHTML = `
-        <div class="col"></div>
-        <div class="col">
-          <div class="file-name">
-            <div class="name">${file.name}</div>
-            <span>0%</span>
-          </div>
-          <div class="file-progress">
-            <span></span>
-          </div>
-          <div class="file-size">${(file.size / (1024 * 1024)).toFixed(2)} MB</div>
-        </div>
-       
-      `;
-      listContainer.appendChild(li);
+    if (!isUploading) {
+      isUploading = true;
+      console.log("mtaw ansinc");
+      uploadBatch();
     }
-  });
-}
+  };
 
-function addFilesAndStartUpload(newFiles) {
-  files = [...newFiles]
-  displayFiles();
+  dropArea.ondragover = (e) => {
+    e.preventDefault();
+    dropArea.classList.add("drag-over-effect");
+  };
 
-  if (!isUploading) {
-    uploadFilesInBatches();
+  dropArea.ondragleave = () => {
+    dropArea.classList.remove("drag-over-effect");
+  };
+
+  dropArea.ondragenter = (e) => {
+    e.preventDefault();
+    dropArea.classList.add("drag-over-effect");
+  };
+
+  dropArea.ondragend = () => {
+    dropArea.classList.remove("drag-over-effect");
+  };
+
+  dropArea.ondrop = (e) => {
+    e.preventDefault();
+    dropArea.classList.remove("drag-over-effect");
+
+    if (e.dataTransfer.items) {
+      const newFiles = [...e.dataTransfer.files].filter((file) =>
+        typeValidation(file.type)
+      );
+      addFilesAndStartUpload(newFiles);
+    }
+  };
+
+  function displayFiles() {
+    listSection.style.display = "block";
+
+    files.forEach((file) => {
+      if (!uploadedFiles.includes(file)) {
+        const li = document.createElement("li");
+        li.classList.add("in-prog");
+        li.innerHTML = `
+          <div class="col"></div>
+          <div class="col">
+            <div class="file-name">
+              <div class="name">${file.name}</div>
+              <span>0%</span>
+            </div>
+            <div class="file-progress">
+              <span></span>
+            </div>
+            <div class="file-size">${(file.size / (1024 * 1024)).toFixed(
+              2
+            )} MB</div>
+          </div>
+        `;
+        listContainer.appendChild(li);
+      }
+    });
   }
-}
 
+  function addFilesAndStartUpload(newFiles) {
+    files = [...newFiles];
+    displayFiles();
 
-function uploadFilesInBatches() {
-  isUploading = true;
-  const batchSize = 3;
-  const totalBatches = Math.ceil(files.length / batchSize);
+    if (!isUploading) {
+      isUploading = true;
+      uploadBatch();
+    }
+  }
 
   let currentBatch = 0;
+  const batchSize = 3;
 
-  function uploadBatch() {
-    const start = currentBatch * batchSize;
-    const end = Math.min(start + batchSize);
-    const batchFiles = files.slice(start, end);
-    console.log("Batch", currentBatch + 1, "of", totalBatches);
+  async function uploadBatch() {
+    let start = currentBatch * batchSize;
+    let end = Math.min(start + batchSize, files.length);
+    console.log(start + "this is start");
+    console.log(end + "this is end");
+
+    let batchFiles = files.slice(start, end);
+    console.log("Batch", "of", Math.ceil(files.length / batchSize));
 
     if (batchFiles.length === 0) {
       console.log("All files uploaded successfully.");
-
+      currentBatch = uploadBatch.length;
       isUploading = false;
-      return;
+      uploadBatch();
+      batchFiles = [];
+      // return;
     }
 
     let completedCount = 0;
-    let hasError = false;
 
     batchFiles.forEach((file, i) => {
       if (!uploadedFiles.includes(file)) {
@@ -120,8 +136,6 @@ function uploadFilesInBatches() {
           }
         }
 
-     
-
         li.classList.add("in-prog");
 
         const xhr = new XMLHttpRequest();
@@ -130,8 +144,10 @@ function uploadFilesInBatches() {
 
         xhr.upload.onprogress = (e) => {
           const percentComplete = (e.loaded / e.total) * 100;
-          li.querySelector(".file-name span").innerHTML = Math.round(percentComplete) + "%";
-          li.querySelector(".file-progress span").style.width = percentComplete + "%";
+          li.querySelector(".file-name span").innerHTML =
+            Math.round(percentComplete) + "%";
+          li.querySelector(".file-progress span").style.width =
+            percentComplete + "%";
         };
 
         xhr.onload = () => {
@@ -142,11 +158,11 @@ function uploadFilesInBatches() {
             uploadedFiles.push(file);
 
             if (completedCount === batchFiles.length) {
-              if (a > 1) {
-                uploadBatch(); 
-              }
+              isUploading = false;
               currentBatch++;
-              uploadBatch(); 
+              uploadBatch(currentBatch);
+              console.log("exav");
+              console.log(completedCount + "nice");
             }
           }
         };
@@ -156,7 +172,7 @@ function uploadFilesInBatches() {
           hasError = true;
         };
 
-        const serverEndpoint = "http://localhost:8080"; 
+        const serverEndpoint = "http://localhost:8080"; // Replace with your server endpoint
         xhr.open("POST", serverEndpoint, true);
 
         xhr.send(data);
@@ -164,11 +180,11 @@ function uploadFilesInBatches() {
     });
   }
 
-  uploadBatch();
-}
-
-
-
-function typeValidation(fileType) {
-  return fileType.startsWith("image/") || fileType.startsWith("video/") || fileType === "application/pdf";
-}
+  function typeValidation(fileType) {
+    return (
+      fileType.startsWith("image/") ||
+      fileType.startsWith("video/") ||
+      fileType === "application/pdf"
+    );
+  }
+});
