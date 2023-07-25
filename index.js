@@ -1,4 +1,3 @@
-// Make sure the DOM is ready before executing the code
 document.addEventListener("DOMContentLoaded", () => {
   const dropArea = document.querySelector(".container__cart");
   const listSection = document.querySelector(".container__list-section");
@@ -9,7 +8,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const fileSelectorInput = document.querySelector(
     ".container__coldrap-file-selector-input"
   );
-  let a = 0;
   let files = [];
   let uploadedFiles = [];
   let isUploading = false;
@@ -17,21 +15,13 @@ document.addEventListener("DOMContentLoaded", () => {
   fileSelector.onclick = () => fileSelectorInput.click();
 
   fileSelectorInput.onchange = () => {
-    a += 1;
-    // if (a > 1) {
-    //   console.log("mtela");
-    //   currentBatch = uploadedFiles + 2;
-    //   console.log(currentBatch);
-    //   console.log(files + "this is files");
-    // }
     const newFiles = [...fileSelectorInput.files];
-    files = [...newFiles];
+    files.push(...newFiles);
     displayFiles();
-
     if (!isUploading) {
       isUploading = true;
-      console.log("mtaw ansinc");
-      uploadBatch();
+      a = 0;
+      uploadBatch(0);
     }
   };
 
@@ -67,60 +57,53 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function displayFiles() {
     listSection.style.display = "block";
+    const num = document.querySelectorAll(".in-prog").length;
 
-    files.forEach((file) => {
+    for (let i = num; i < files.length; i++) {
+      const file = files[i];
       if (!uploadedFiles.includes(file)) {
         const li = document.createElement("li");
         li.classList.add("in-prog");
-        li.innerHTML = `
-          <div class="col"></div>
-          <div class="col">
-            <div class="file-name">
-              <div class="name">${file.name}</div>
-              <span>0%</span>
-            </div>
-            <div class="file-progress">
-              <span></span>
-            </div>
+        li.innerHTML = ` 
+          <div class="col"></div> 
+          <div class="col"> 
+            <div class="file-name"> 
+              <div class="name">${file.name}</div> 
+              <span>0%</span> 
+            </div> 
+            <div class="file-progress"> 
+              <span></span> 
+            </div> 
             <div class="file-size">${(file.size / (1024 * 1024)).toFixed(
               2
-            )} MB</div>
-          </div>
+            )} MB</div> 
+          </div> 
         `;
         listContainer.appendChild(li);
       }
-    });
+    }
   }
 
   function addFilesAndStartUpload(newFiles) {
-    files = [...newFiles];
+    files = files.push(...newFiles);
     displayFiles();
-
-    if (!isUploading) {
-      isUploading = true;
-      uploadBatch();
-    }
   }
 
   let currentBatch = 0;
   const batchSize = 3;
 
-  async function uploadBatch() {
-    let start = currentBatch * batchSize;
+  function uploadBatch(start) {
     let end = Math.min(start + batchSize, files.length);
+    console.log(start, end);
     console.log(start + "this is start");
     console.log(end + "this is end");
 
     let batchFiles = files.slice(start, end);
     console.log("Batch", "of", Math.ceil(files.length / batchSize));
-
+    console.log(batchFiles);
     if (batchFiles.length === 0) {
-      console.log("All files uploaded successfully.");
-      currentBatch = uploadBatch.length;
-      isUploading = false;
-      uploadBatch();
-      batchFiles = [];
-      // return;
+      currentBatch = 0;
+      // isUploading = false;
     }
 
     let completedCount = 0;
@@ -158,11 +141,9 @@ document.addEventListener("DOMContentLoaded", () => {
             uploadedFiles.push(file);
 
             if (completedCount === batchFiles.length) {
-              isUploading = false;
+              // isUploading = false;
               currentBatch++;
-              uploadBatch(currentBatch);
-              console.log("exav");
-              console.log(completedCount + "nice");
+              uploadBatch(end);
             }
           }
         };
@@ -172,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
           hasError = true;
         };
 
-        const serverEndpoint = "http://localhost:8080"; // Replace with your server endpoint
+        const serverEndpoint = "http://localhost:8080";
         xhr.open("POST", serverEndpoint, true);
 
         xhr.send(data);
