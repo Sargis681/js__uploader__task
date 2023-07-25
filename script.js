@@ -10,7 +10,6 @@ app.use(express.json());
 app.get("/", (req, res) => {
   console.log(req);
   res.send("Hello, Express!");
-  console.log("asdasd");
 });
 
 app.post("/", (req, res) => {
