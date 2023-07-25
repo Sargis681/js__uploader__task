@@ -18,9 +18,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const newFiles = [...fileSelectorInput.files];
     files.push(...newFiles);
     displayFiles();
+
     if (!isUploading) {
       isUploading = true;
-      a = 0;
       uploadBatch(0);
     }
   };
@@ -46,6 +46,15 @@ document.addEventListener("DOMContentLoaded", () => {
   dropArea.ondrop = (e) => {
     e.preventDefault();
     dropArea.classList.remove("drag-over-effect");
+
+    function addFilesAndStartUpload(newFiles) {
+      files.push(...newFiles);
+      displayFiles();
+      if (!isUploading) {
+        isUploading = true;
+        uploadBatch(0);
+      }
+    }
 
     if (e.dataTransfer.items) {
       const newFiles = [...e.dataTransfer.files].filter((file) =>
@@ -84,26 +93,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function addFilesAndStartUpload(newFiles) {
-    files = files.push(...newFiles);
-    displayFiles();
-  }
-
   let currentBatch = 0;
   const batchSize = 3;
 
   function uploadBatch(start) {
     let end = Math.min(start + batchSize, files.length);
     console.log(start, end);
-    console.log(start + "this is start");
-    console.log(end + "this is end");
 
     let batchFiles = files.slice(start, end);
     console.log("Batch", "of", Math.ceil(files.length / batchSize));
     console.log(batchFiles);
+
     if (batchFiles.length === 0) {
+      isUploading = false;
       currentBatch = 0;
-      // isUploading = false;
+      console.log("All files uploaded!");
     }
 
     let completedCount = 0;
@@ -141,7 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
             uploadedFiles.push(file);
 
             if (completedCount === batchFiles.length) {
-              // isUploading = false;
+              isUploading = false;
               currentBatch++;
               uploadBatch(end);
             }
@@ -150,10 +154,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         xhr.onerror = () => {
           console.log("An error occurred during file upload.");
-          hasError = true;
         };
 
-        const serverEndpoint = "http://localhost:8080";
+        const serverEndpoint = "http://localhost:8080"; // Replace with your server endpoint
         xhr.open("POST", serverEndpoint, true);
 
         xhr.send(data);
