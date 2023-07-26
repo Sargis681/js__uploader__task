@@ -2,10 +2,10 @@ const dropArea = document.querySelector(".container__cart");
 const listSection = document.querySelector(".container__list-section");
 const listContainer = document.querySelector(".container__list");
 const fileSelector = document.querySelector(
-  ".container__coldrap-file-selector"
+  ".container__caltrap-file-selector"
 );
 const fileSelectorInput = document.querySelector(
-  ".container__coldrap-file-selector-input"
+  ".container__caltrap-file-selector-input"
 );
 let files = [];
 let isUploading = false;
