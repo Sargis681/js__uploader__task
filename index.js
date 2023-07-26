@@ -8,12 +8,11 @@ const fileSelectorInput = document.querySelector(
   ".container__coldrap-file-selector-input"
 );
 let files = [];
-let uploadedFiles = [];
 let isUploading = false;
 
 fileSelector.onclick = () => fileSelectorInput.click();
+
 fileSelectorInput.addEventListener("change", () => {
-  console.log("dsadas");
   const newFiles = [...fileSelectorInput.files];
   files.push(...newFiles);
   displayFiles();
@@ -67,28 +66,29 @@ dropArea.ondrop = (e) => {
 
 function displayFiles() {
   listSection.style.display = "block";
-  const num = document.querySelectorAll(".in-prog").length;
+  const num = document.querySelectorAll(".container__prog").length;
 
   for (let i = num; i < files.length; i++) {
     const file = files[i];
-    if (!uploadedFiles.includes(file)) {
+    if (!listContainer.querySelector(`[data-name="${file.name}"]`)) {
       const li = document.createElement("li");
-      li.classList.add("in-prog");
-      li.innerHTML = ` 
-              <div class="col"></div> 
-              <div class="col"> 
-                <div class="file-name"> 
-                  <div class="name">${file.name}</div> 
-                  <span>0%</span> 
-                </div> 
-                <div class="file-progress"> 
-                  <span></span> 
-                </div> 
-                <div class="file-size">${(file.size / (1024 * 1024)).toFixed(
-                  2
-                )} MB</div> 
-              </div> 
-            `;
+      li.classList.add("container__prog");
+      li.innerHTML = `
+        <div class="container__col"></div>
+        <div class="container__col">
+          <div class="container__file">
+            <div class="container__name">${file.name}</div>
+            <span>0%</span>
+          </div>
+          <div class="file-progress">
+            <span></span>
+          </div>
+          <div class="file-size">${(file.size / (1024 * 1024)).toFixed(
+            2
+          )} MB</div>
+        </div>
+      `;
+      li.setAttribute("data-name", file.name);
       listContainer.appendChild(li);
     }
   }
@@ -104,6 +104,7 @@ function typeValidation(fileType) {
     fileType === "application/pdf"
   );
 }
+
 function uploadBatch(start) {
   let end = Math.min(start + batchSize, files.length);
   console.log(start, end);
@@ -114,9 +115,8 @@ function uploadBatch(start) {
   if (batchFiles.length === 0) {
     console.log("All files uploaded!");
     files = [];
-    uploadedFiles = [];
     isUploading = false;
-    listContainer.innerHTML = ""; // Clear the list container
+    listContainer.innerHTML = "";
     return;
   }
 
@@ -124,51 +124,42 @@ function uploadBatch(start) {
 
   batchFiles.forEach((file, i) => {
     console.log("bhjjhu");
-    if (!uploadedFiles.includes(file)) {
-      let li;
-      const fileElements = listContainer.getElementsByClassName("name");
-      for (let i = 0; i < fileElements.length; i++) {
-        if (fileElements[i].textContent === file.name) {
-          li = fileElements[i].closest("li");
-          break;
+    let li = listContainer.querySelector(`[data-name="${file.name}"]`);
+
+    li.classList.add("container__prog");
+
+    const xhr = new XMLHttpRequest();
+    const data = new FormData();
+    data.append("file", file);
+
+    xhr.upload.onprogress = (e) => {
+      const percentComplete = (e.loaded / e.total) * 100;
+      li.querySelector(".container__file span").innerHTML =
+        Math.round(percentComplete) + "%";
+      li.querySelector(".file-progress span").style.width =
+        percentComplete + "%";
+    };
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        li.classList.add("container__complete");
+        console.log(completedCount);
+        completedCount++;
+
+        if (completedCount === batchFiles.length) {
+          isUploading = false;
+          currentBatch++;
+          uploadBatch(end);
         }
       }
+    };
 
-      li.classList.add("in-prog");
+    xhr.onerror = () => {
+      console.log("An error occurred during file upload.");
+    };
 
-      const xhr = new XMLHttpRequest();
-      const data = new FormData();
-      data.append("file", file);
-
-      xhr.upload.onprogress = (e) => {
-        const percentComplete = (e.loaded / e.total) * 100;
-        li.querySelector(".file-name span").innerHTML =
-          Math.round(percentComplete) + "%";
-        li.querySelector(".file-progress span").style.width =
-          percentComplete + "%";
-      };
-
-      xhr.onload = () => {
-        if (xhr.status === 200) {
-          li.classList.add("complete");
-          console.log(completedCount);
-          completedCount++;
-          uploadedFiles.push(file);
-
-          if (completedCount === batchFiles.length) {
-            isUploading = false;
-            currentBatch++;
-            uploadBatch(end);
-          }
-        }
-      };
-      xhr.onerror = () => {
-        console.log("An error occurred during file upload.");
-      };
-      const serverEndpoint = "http://localhost:8080"; // Replace with your server endpoint
-      xhr.open("POST", serverEndpoint, true);
-
-      xhr.send(data);
-    }
+    const serverEndpoint = "http://localhost:8080"; // Replace with your server endpoint
+    xhr.open("POST", serverEndpoint, true);
+    xhr.send(data);
   });
 }
