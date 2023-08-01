@@ -1,12 +1,8 @@
 const dropArea = document.querySelector(".container__cart");
 const listSection = document.querySelector(".container__list-section");
 const listContainer = document.querySelector(".container__list");
-const fileSelector = document.querySelector(
-  ".container__caltrap-file-selector"
-);
-const fileSelectorInput = document.querySelector(
-  ".container__caltrap-file-selector-input"
-);
+const fileSelector = document.querySelector(".container__caltrap-file-selector");
+const fileSelectorInput = document.querySelector(".container__caltrap-file-selector-input");
 let f = 0;
 const files = [];
 unloading = true;
@@ -17,7 +13,7 @@ fileSelectorInput.addEventListener("change", () => {
   files.push(...newFiles);
   displayFiles();
   if (unloading) {
-    [a, b] = uploadBatch(a, b);
+    [start, end] = uploadBatch(start, end);
   }
 });
 
@@ -46,7 +42,7 @@ dropArea.ondrop = (e) => {
   function addFilesAndStartUpload(newFiles) {
     files.push(...newFiles);
     displayFiles();
-    [a, b] = uploadBatch(a, b);
+    [start, end] = uploadBatch(start, end);
   }
 
   if (e.dataTransfer.items) {
@@ -95,8 +91,8 @@ function typeValidation(fileType) {
   );
 }
 
-let a = 0;
-let b = 3;
+let start = 0;
+let end = 3;
 
 function uploadBatch(startIndex, endIndex) {
   console.log(endIndex);
@@ -126,11 +122,9 @@ function uploadBatch(startIndex, endIndex) {
       li.classList.add("container__complete");
       f++;
       if (f % 3 === 0) {
-        a = endIndex;
-        b = endIndex + 3;
-        console.log(a + " popoxvat a");
-        console.log(b + " popoxvat b");
-        [a, b] = uploadBatch(a, b);
+        start = endIndex;
+        end = endIndex + 3;
+        [start, end] = uploadBatch(start, end);
         if (f === files.length) unloading = true;
       }
     };
@@ -144,5 +138,5 @@ function uploadBatch(startIndex, endIndex) {
     xhr.send(data);
   }
 
-  return [a, b];
+  return [start, end];
 }
