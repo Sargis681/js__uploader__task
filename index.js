@@ -1,4 +1,3 @@
-unloading = true;
 const dropArea = document.querySelector(".container__cart");
 const listSection = document.querySelector(".container__list-section");
 const listContainer = document.querySelector(".container__list");
@@ -8,19 +7,17 @@ const fileSelector = document.querySelector(
 const fileSelectorInput = document.querySelector(
   ".container__caltrap-file-selector-input"
 );
-
 let f = 0;
-let b = 3;
 const files = [];
-let a = files.length;
-fileSelector.onclick = () => fileSelectorInput.click();
+unloading = true;
 
+fileSelector.onclick = () => fileSelectorInput.click();
 fileSelectorInput.addEventListener("change", () => {
   const newFiles = [...fileSelectorInput.files];
   files.push(...newFiles);
   displayFiles();
   if (unloading) {
-    uploadBatch(a, b);
+    [a, b] = uploadBatch(a, b);
   }
 });
 
@@ -49,7 +46,7 @@ dropArea.ondrop = (e) => {
   function addFilesAndStartUpload(newFiles) {
     files.push(...newFiles);
     displayFiles();
-    uploadBatch(a, b);
+    [a, b] = uploadBatch(a, b);
   }
 
   if (e.dataTransfer.items) {
@@ -98,24 +95,25 @@ function typeValidation(fileType) {
   );
 }
 
-function uploadBatch(a, b) {
-  console.log(b);
+let a = 0;
+let b = 3;
+
+function uploadBatch(startIndex, endIndex) {
+  console.log(endIndex);
   console.log("bhjjhu");
   unloading = false;
-  for (let i = a; i < b; i++) {
+
+  for (let i = startIndex; i < endIndex; i++) {
     let li = listContainer.querySelector(
       `[data-name="${files[i] && files[i].name}"]`
     );
-
     if (!files[i]) {
       unloading = true;
       return;
     }
-
     const xhr = new XMLHttpRequest();
     const data = new FormData();
     data.append("file", files[i]);
-
     xhr.upload.onprogress = (e) => {
       const percentComplete = (e.loaded / e.total) * 100;
       li.querySelector(".container__file span").innerHTML =
@@ -125,18 +123,16 @@ function uploadBatch(a, b) {
     };
 
     xhr.onload = () => {
-      // if (xhr.status === 200) {
       li.classList.add("container__complete");
       f++;
       if (f % 3 === 0) {
-        a = a + 3;
-        b = b + 3;
+        a = endIndex;
+        b = endIndex + 3;
         console.log(a + " popoxvat a");
         console.log(b + " popoxvat b");
-        uploadBatch(a, b);
-        if ((f = files.length)) unloading = true;
+        [a, b] = uploadBatch(a, b);
+        if (f === files.length) unloading = true;
       }
-      // }
     };
 
     xhr.onerror = () => {
@@ -145,7 +141,8 @@ function uploadBatch(a, b) {
 
     const serverEndpoint = "http://localhost:8080";
     xhr.open("POST", serverEndpoint, true);
-
     xhr.send(data);
   }
+
+  return [a, b];
 }
