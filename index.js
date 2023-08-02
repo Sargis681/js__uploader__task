@@ -1,8 +1,12 @@
 const dropArea = document.querySelector(".container__cart");
 const listSection = document.querySelector(".container__list-section");
 const listContainer = document.querySelector(".container__list");
-const fileSelector = document.querySelector(".container__caltrap-file-selector");
-const fileSelectorInput = document.querySelector(".container__caltrap-file-selector-input");
+const fileSelector = document.querySelector(
+  ".container__caltrap-file-selector"
+);
+const fileSelectorInput = document.querySelector(
+  ".container__caltrap-file-selector-input"
+);
 let f = 0;
 const files = [];
 unloading = true;
@@ -13,7 +17,7 @@ fileSelectorInput.addEventListener("change", () => {
   files.push(...newFiles);
   displayFiles();
   if (unloading) {
-    [start, end] = uploadBatch(start, end);
+    uploadBatch(start, end);
   }
 });
 
@@ -59,10 +63,9 @@ function displayFiles() {
 
   for (let i = num; i < files.length; i++) {
     const file = files[i];
-    if (!listContainer.querySelector(`[data-name="${file.name}"]`)) {
-      const li = document.createElement("li");
-      li.classList.add("container__prog");
-      li.innerHTML = `
+    const li = document.createElement("li");
+    li.classList.add("container__prog");
+    li.innerHTML = `
         <div class="container__col"></div>
         <div class="container__col">
           <div class="container__file">
@@ -77,9 +80,8 @@ function displayFiles() {
           )} MB</div>
         </div>
       `;
-      li.setAttribute("data-name", file.name);
-      listContainer.appendChild(li);
-    }
+    li.setAttribute("data-name", file.name);
+    listContainer.appendChild(li);
   }
 }
 
@@ -110,12 +112,12 @@ function uploadBatch(startIndex, endIndex) {
     const xhr = new XMLHttpRequest();
     const data = new FormData();
     data.append("file", files[i]);
+    let lifile = li.querySelector(".container__file span");
+    let liProgres = li.querySelector(".file-progress span");
     xhr.upload.onprogress = (e) => {
       const percentComplete = (e.loaded / e.total) * 100;
-      li.querySelector(".container__file span").innerHTML =
-        Math.round(percentComplete) + "%";
-      li.querySelector(".file-progress span").style.width =
-        percentComplete + "%";
+      lifile.innerHTML = Math.round(percentComplete) + "%";
+      liProgres.style.width = percentComplete + "%";
     };
 
     xhr.onload = () => {
@@ -124,7 +126,7 @@ function uploadBatch(startIndex, endIndex) {
       if (f % 3 === 0) {
         start = endIndex;
         end = endIndex + 3;
-        [start, end] = uploadBatch(start, end);
+        uploadBatch(start, end);
         if (f === files.length) unloading = true;
       }
     };
@@ -137,6 +139,4 @@ function uploadBatch(startIndex, endIndex) {
     xhr.open("POST", serverEndpoint, true);
     xhr.send(data);
   }
-
-  return [start, end];
 }
