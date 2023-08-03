@@ -16,8 +16,13 @@ fileSelectorInput.addEventListener("change", () => {
   const newFiles = [...fileSelectorInput.files];
   files.push(...newFiles);
   displayFiles();
-  if (unloading) {
-    [start, end] = uploadBatch(start, end);
+  let eti = document.querySelectorAll(".file-progress").length;
+  // console.log(eti);
+  if (eti >= 3) {
+    uploadBatch(start, end);
+  } else {
+    end = eti;
+    uploadBatch(start, end);
   }
 });
 
@@ -100,7 +105,6 @@ let end = 3;
 
 function uploadBatch(startIndex, endIndex) {
   console.log(endIndex);
-  console.log("bhjjhu");
   unloading = false;
 
   for (let i = startIndex; i < endIndex; i++) {
@@ -114,6 +118,7 @@ function uploadBatch(startIndex, endIndex) {
     const xhr = new XMLHttpRequest();
     const data = new FormData();
     data.append("file", files[i]);
+    console.log(data);
     xhr.upload.onprogress = (e) => {
       const percentComplete = (e.loaded / e.total) * 100;
       li.querySelector(".container__file span").innerHTML =
@@ -128,7 +133,7 @@ function uploadBatch(startIndex, endIndex) {
       if (f % 3 === 0) {
         start = endIndex;
         end = endIndex + 3;
-        [start, end] = uploadBatch(start, end);
+        uploadBatch(start, end);
         if (f === files.length) unloading = true;
       }
     };
