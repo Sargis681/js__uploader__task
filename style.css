@@ -176,7 +176,7 @@ body {
     float: right;
 }
 
-.container__list li .file-progress {
+.container__list li .container__progress {
     width: 100%;
     height: 5px;
     margin-top: 8px;
@@ -184,7 +184,7 @@ body {
     background-color: #dee6fd;
 }
 
-.container__list li .file-progress span {
+.container__list li .container__progress span {
     display: block;
     width: 0%;
     height: 100%;
@@ -215,13 +215,4 @@ body {
     background-color: transparent;
 }
 
-.container__list li.container__complete span,
-.container__list li.container__complete .file-progress,
-.container__list li.container__complete svg.cross {
-    display: none;
-}
 
-.container__list li.container__prog .file-size,
-.container__list li.container__prog svg.tick {
-    display: none;
-}

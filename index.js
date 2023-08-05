@@ -7,23 +7,30 @@ const fileSelector = document.querySelector(
 const fileSelectorInput = document.querySelector(
   ".container__caltrap-file-selector-input"
 );
-let f = 0;
+
+let uploadEnyPoint = 0;
 const files = [];
-unloading = true;
+let unloading = true;
+let a = 0
+let container = []
 
 fileSelector.onclick = () => fileSelectorInput.click();
 fileSelectorInput.addEventListener("change", () => {
   const newFiles = [...fileSelectorInput.files];
   files.push(...newFiles);
   displayFiles();
-  let eti = document.querySelectorAll(".file-progress").length;
-  // console.log(eti);
-  if (eti >= 3) {
-    uploadBatch(start, end);
-  } else {
-    end = eti;
-    uploadBatch(start, end);
+  console.log(files);
+  if (unloading) {
+    unloading = false
+
+    if (files.length - uploadEnyPoint >= 3) {
+      console.log(files.length - uploadEnyPoint);
+      uploadBatch(0, 3);
+    } else {
+      uploadBatch(0, files.length - uploadEnyPoint);
+    }
   }
+
 });
 
 dropArea.ondragover = (e) => {
@@ -51,7 +58,12 @@ dropArea.ondrop = (e) => {
   function addFilesAndStartUpload(newFiles) {
     files.push(...newFiles);
     displayFiles();
-    [start, end] = uploadBatch(start, end);
+    if (files.length - uploadEnyPoint >= 3) {
+      console.log(files.length - uploadEnyPoint);
+      uploadBatch(0, 3);
+    } else {
+      uploadBatch(0, files.length - uploadEnyPoint);
+    }
   }
 
   if (e.dataTransfer.items) {
@@ -64,9 +76,8 @@ dropArea.ondrop = (e) => {
 
 function displayFiles() {
   listSection.style.display = "block";
-  const num = document.querySelectorAll(".container__prog").length;
 
-  for (let i = num; i < files.length; i++) {
+  for (let i = uploadEnyPoint; i < files.length; i++) {
     const file = files[i];
     if (!listContainer.querySelector(`[data-name="${file.name}"]`)) {
       const li = document.createElement("li");
@@ -76,19 +87,22 @@ function displayFiles() {
         <div class="container__col">
           <div class="container__file">
             <div class="container__name">${file.name}</div>
-            <span>0%</span>
+            <span >0</span>
+            <span>%</span>
           </div>
-          <div class="file-progress">
+          <div class="container__progress">
             <span></span>
           </div>
           <div class="file-size">${(file.size / (1024 * 1024)).toFixed(
-            2
-          )} MB</div>
+        2
+      )} MB</div>
         </div>
       `;
       li.setAttribute("data-name", file.name);
       listContainer.appendChild(li);
+      container.push(li)
     }
+
   }
 }
 
@@ -100,52 +114,54 @@ function typeValidation(fileType) {
   );
 }
 
-let start = 0;
-let end = 3;
 
-function uploadBatch(startIndex, endIndex) {
-  console.log(endIndex);
-  unloading = false;
 
-  for (let i = startIndex; i < endIndex; i++) {
-    let li = listContainer.querySelector(
-      `[data-name="${files[i] && files[i].name}"]`
-    );
-    if (!files[i]) {
-      unloading = true;
-      return;
-    }
+function uploadBatch(start, end) {
+
+  for (let i = start; i < end; i++) {
+    console.log(start, end);
+
     const xhr = new XMLHttpRequest();
     const data = new FormData();
-    data.append("file", files[i]);
-    console.log(data);
-    xhr.upload.onprogress = (e) => {
-      const percentComplete = (e.loaded / e.total) * 100;
-      li.querySelector(".container__file span").innerHTML =
-        Math.round(percentComplete) + "%";
-      li.querySelector(".file-progress span").style.width =
-        percentComplete + "%";
-    };
+    const serverEndpoint = "http://localhost:8080";
 
-    xhr.onload = () => {
-      li.classList.add("container__complete");
-      f++;
-      if (f % 3 === 0) {
-        start = endIndex;
-        end = endIndex + 3;
-        uploadBatch(start, end);
-        if (f === files.length) unloading = true;
+    data.append("file", files[i]);
+    xhr.open("POST", serverEndpoint, true);
+    const progress = container[i]
+    console.log(container);
+    const containerFile = progress.querySelector(".container__file span")
+    const progressSpan = progress.querySelector(".container__progress span")
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const percentComplete = ((e.loaded / e.total) * 100).toFixed(2);
+        containerFile.innerHTML = percentComplete
+        progressSpan.style.width = `${percentComplete}%`
       }
     };
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        uploadEnyPoint++;
+      }
+      else {
+        console.log('error');
+      }
+      a++
+      if (uploadEnyPoint === files.length) {
+        unloading = true
+        a = 0
+        container = []
+        return
+      }
+      else if (a === end) {
+        unloading = false
+        uploadBatch(end, files.length - uploadEnyPoint >= 3 ? end + 3 : end + files.length - uploadEnyPoint)
+      }
+      else {
+        unloading = false
+      }
+    }
 
-    xhr.onerror = () => {
-      console.log("An error occurred during file upload.");
-    };
-
-    const serverEndpoint = "http://localhost:8080";
-    xhr.open("POST", serverEndpoint, true);
     xhr.send(data);
   }
 
-  return [start, end];
 }
