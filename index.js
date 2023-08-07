@@ -11,26 +11,23 @@ const fileSelectorInput = document.querySelector(
 let uploadEnyPoint = 0;
 const files = [];
 let unloading = true;
-let a = 0
-let container = []
+let point = 0;
+let container = [];
 
 fileSelector.onclick = () => fileSelectorInput.click();
 fileSelectorInput.addEventListener("change", () => {
   const newFiles = [...fileSelectorInput.files];
   files.push(...newFiles);
   displayFiles();
-  console.log(files);
   if (unloading) {
-    unloading = false
+    unloading = false;
 
     if (files.length - uploadEnyPoint >= 3) {
-      console.log(files.length - uploadEnyPoint);
       uploadBatch(0, 3);
     } else {
       uploadBatch(0, files.length - uploadEnyPoint);
     }
   }
-
 });
 
 dropArea.ondragover = (e) => {
@@ -59,7 +56,6 @@ dropArea.ondrop = (e) => {
     files.push(...newFiles);
     displayFiles();
     if (files.length - uploadEnyPoint >= 3) {
-      console.log(files.length - uploadEnyPoint);
       uploadBatch(0, 3);
     } else {
       uploadBatch(0, files.length - uploadEnyPoint);
@@ -94,15 +90,14 @@ function displayFiles() {
             <span></span>
           </div>
           <div class="file-size">${(file.size / (1024 * 1024)).toFixed(
-        2
-      )} MB</div>
+            2
+          )} MB</div>
         </div>
       `;
       li.setAttribute("data-name", file.name);
       listContainer.appendChild(li);
-      container.push(li)
+      container.push(li);
     }
-
   }
 }
 
@@ -114,54 +109,49 @@ function typeValidation(fileType) {
   );
 }
 
-
-
 function uploadBatch(start, end) {
-
   for (let i = start; i < end; i++) {
-    console.log(start, end);
-
     const xhr = new XMLHttpRequest();
     const data = new FormData();
     const serverEndpoint = "http://localhost:8080";
 
     data.append("file", files[i]);
     xhr.open("POST", serverEndpoint, true);
-    const progress = container[i]
-    console.log(container);
-    const containerFile = progress.querySelector(".container__file span")
-    const progressSpan = progress.querySelector(".container__progress span")
+    const progress = container[i];
+    const containerFile = progress.querySelector(".container__file span");
+    const progressSpan = progress.querySelector(".container__progress span");
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) {
         const percentComplete = ((e.loaded / e.total) * 100).toFixed(2);
-        containerFile.innerHTML = percentComplete
-        progressSpan.style.width = `${percentComplete}%`
+        containerFile.innerHTML = percentComplete;
+        progressSpan.style.width = `${percentComplete}%`;
       }
     };
     xhr.onload = () => {
       if (xhr.status === 200) {
         uploadEnyPoint++;
+      } else {
+        console.log("error");
       }
-      else {
-        console.log('error');
-      }
-      a++
+      point++;
       if (uploadEnyPoint === files.length) {
-        unloading = true
-        a = 0
-        container = []
-        return
+        unloading = true;
+        point = 0;
+        container = [];
+        return;
+      } else if (point === end) {
+        unloading = false;
+        uploadBatch(
+          end,
+          files.length - uploadEnyPoint >= 3
+            ? end + 3
+            : end + files.length - uploadEnyPoint
+        );
+      } else {
+        unloading = false;
       }
-      else if (a === end) {
-        unloading = false
-        uploadBatch(end, files.length - uploadEnyPoint >= 3 ? end + 3 : end + files.length - uploadEnyPoint)
-      }
-      else {
-        unloading = false
-      }
-    }
+    };
 
     xhr.send(data);
   }
-
 }
