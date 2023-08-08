@@ -150,7 +150,7 @@ function handlerOnload(end, xhr) {
     return;
   } else if (fileToDrag === end) {
     isUnLoading = false;
-    uploadBatch(end, end + Math.min(3, files.length - allUploads));
+    uploadBatch(end, end + Math.min(endIndex, files.length - allUploads));
   }
 }
 
@@ -165,11 +165,11 @@ function uploadBatch(start, end) {
     const progress = container[i];
     const containerFile = progress.querySelector(".container__file span");
     const progressSpan = progress.querySelector(".container__progress span");
+
     xhr.upload.onprogress = (e) =>
       handleProgress(e, containerFile, progressSpan);
-    xhr.onload = () => {
-      handlerOnload(end, xhr);
-    };
+
+    xhr.onload = () => handlerOnload(end, xhr);
 
     xhr.send(data);
   }
