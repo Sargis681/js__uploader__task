@@ -14,9 +14,7 @@ let unloading = true;
 let point = 0;
 let container = [];
 
-fileSelector.onclick = () => fileSelectorInput.click();
-fileSelectorInput.addEventListener("change", () => {
-  const newFiles = [...fileSelectorInput.files];
+function retrievalMethod(newFiles) {
   files.push(...newFiles);
   displayFiles();
   if (unloading) {
@@ -28,6 +26,15 @@ fileSelectorInput.addEventListener("change", () => {
       uploadBatch(0, files.length - uploadEnyPoint);
     }
   }
+}
+
+fileSelector.onclick = () => fileSelectorInput.click();
+fileSelectorInput.addEventListener("change", () => {
+  const newFiles = [...fileSelectorInput.files].filter((file) =>
+    typeValidation(file.type)
+  );
+  console.log(newFiles);
+  retrievalMethod(newFiles);
 });
 
 dropArea.ondragover = (e) => {
@@ -51,22 +58,11 @@ dropArea.ondragend = () => {
 dropArea.ondrop = (e) => {
   e.preventDefault();
   dropArea.classList.remove("drag-over-effect");
-
-  function addFilesAndStartUpload(newFiles) {
-    files.push(...newFiles);
-    displayFiles();
-    if (files.length - uploadEnyPoint >= 3) {
-      uploadBatch(0, 3);
-    } else {
-      uploadBatch(0, files.length - uploadEnyPoint);
-    }
-  }
-
   if (e.dataTransfer.items) {
     const newFiles = [...e.dataTransfer.files].filter((file) =>
       typeValidation(file.type)
     );
-    addFilesAndStartUpload(newFiles);
+    retrievalMethod(newFiles);
   }
 };
 
@@ -78,22 +74,45 @@ function displayFiles() {
     if (!listContainer.querySelector(`[data-name="${file.name}"]`)) {
       const li = document.createElement("li");
       li.classList.add("container__prog");
-      li.innerHTML = `
-        <div class="container__col"></div>
-        <div class="container__col">
-          <div class="container__file">
-            <div class="container__name">${file.name}</div>
-            <span >0</span>
-            <span>%</span>
-          </div>
-          <div class="container__progress">
-            <span></span>
-          </div>
-          <div class="file-size">${(file.size / (1024 * 1024)).toFixed(
-            2
-          )} MB</div>
-        </div>
-      `;
+      var containerCol1 = document.createElement("div");
+      containerCol1.className = "container__col";
+
+      var containerCol2 = document.createElement("div");
+      containerCol2.className = "container__col";
+
+      var containerFile = document.createElement("div");
+      containerFile.className = "container__file";
+
+      var containerName = document.createElement("div");
+      containerName.className = "container__name";
+      containerName.textContent = file.name;
+
+      var span1 = document.createElement("span");
+      span1.textContent = "0";
+      var span2 = document.createElement("span");
+      span2.textContent = "%";
+
+      containerFile.appendChild(containerName);
+      containerFile.appendChild(span1);
+      containerFile.appendChild(span2);
+
+      var containerProgress = document.createElement("div");
+      containerProgress.className = "container__progress";
+
+      var progressSpan = document.createElement("span");
+      containerProgress.appendChild(progressSpan);
+
+      var fileSize = document.createElement("div");
+      fileSize.className = "file-size";
+      fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+
+      containerCol2.appendChild(containerFile);
+      containerCol2.appendChild(containerProgress);
+      containerCol2.appendChild(fileSize);
+
+      li.appendChild(containerCol1);
+      li.appendChild(containerCol2);
+
       li.setAttribute("data-name", file.name);
       listContainer.appendChild(li);
       container.push(li);
@@ -133,7 +152,9 @@ function uploadBatch(start, end) {
       } else {
         console.log("error");
       }
+
       point++;
+
       if (uploadEnyPoint === files.length) {
         unloading = true;
         point = 0;
@@ -141,14 +162,7 @@ function uploadBatch(start, end) {
         return;
       } else if (point === end) {
         unloading = false;
-        uploadBatch(
-          end,
-          files.length - uploadEnyPoint >= 3
-            ? end + 3
-            : end + files.length - uploadEnyPoint
-        );
-      } else {
-        unloading = false;
+        uploadBatch(end, end + Math.min(3, files.length - uploadEnyPoint));
       }
     };
 
