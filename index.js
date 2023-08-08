@@ -9,23 +9,22 @@ const fileSelectorInput = document.querySelector(
 );
 
 let allUploads = 0;
+
 const files = [];
 let unloading = true;
 let fileToDrag = 0;
 let container = [];
-const start = 0;
-const end = 3;
 
 function retrievalMethod(newFiles) {
   files.push(...newFiles);
   displayFiles();
   if (unloading) {
     unloading = false;
-    console.log(allUploads);
+
     if (files.length - allUploads >= 3) {
-      uploadBatch(start, end);
+      uploadBatch(0, 3);
     } else {
-      uploadBatch(start, files.length - allUploads);
+      uploadBatch(0, files.length - allUploads);
     }
   }
 }
@@ -35,7 +34,6 @@ fileSelectorInput.addEventListener("change", () => {
   const newFiles = [...fileSelectorInput.files].filter((file) =>
     typeValidation(file.type)
   );
-  console.log(newFiles);
   retrievalMethod(newFiles);
 });
 
@@ -107,6 +105,7 @@ function displayFiles() {
       let fileSize = document.createElement("div");
       fileSize.className = "file-size";
       fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+
       containerCol2.appendChild(containerFile);
       containerCol2.appendChild(containerProgress);
       containerCol2.appendChild(fileSize);
@@ -128,7 +127,6 @@ function typeValidation(fileType) {
     fileType === "application/pdf"
   );
 }
-
 function handleProgress(e, containerFile, progressSpan) {
   if (e.lengthComputable) {
     const percentComplete = ((e.loaded / e.total) * 100).toFixed(2);
@@ -137,9 +135,12 @@ function handleProgress(e, containerFile, progressSpan) {
   }
 }
 
-function handleOnload() {
-  allUploads++;
+function handlerOnload(end, xhr) {
+  if (xhr.status === 200) {
+    allUploads++;
+  }
   fileToDrag++;
+
   if (allUploads === files.length) {
     unloading = true;
     fileToDrag = 0;
@@ -147,7 +148,7 @@ function handleOnload() {
     return;
   } else if (fileToDrag === end) {
     unloading = false;
-    uploadBatch(end, end + files.length - allUploads);
+    uploadBatch(end, end + Math.min(3, files.length - allUploads));
   }
 }
 
@@ -162,21 +163,10 @@ function uploadBatch(start, end) {
     const progress = container[i];
     const containerFile = progress.querySelector(".container__file span");
     const progressSpan = progress.querySelector(".container__progress span");
-
     xhr.upload.onprogress = (e) =>
       handleProgress(e, containerFile, progressSpan);
-
     xhr.onload = () => {
-      if (xhr.status === 200) {
-        handleOnload(
-          allUploads,
-          fileToDrag,
-          files.length,
-          container,
-          unloading,
-          end
-        );
-      }
+      handlerOnload(end, xhr);
     };
 
     xhr.send(data);
