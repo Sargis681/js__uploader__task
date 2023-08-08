@@ -11,20 +11,22 @@ const fileSelectorInput = document.querySelector(
 let allUploads = 0;
 
 const files = [];
-let unloading = true;
+let isUnLoading = true;
 let fileToDrag = 0;
 let container = [];
+let startIndex = 0;
+let endIndex = 3;
 
 function retrievalMethod(newFiles) {
   files.push(...newFiles);
   displayFiles();
-  if (unloading) {
-    unloading = false;
+  if (isUnLoading) {
+    isUnLoading = false;
 
-    if (files.length - allUploads >= 3) {
-      uploadBatch(0, 3);
+    if (files.length - allUploads >= endIndex) {
+      uploadBatch(startIndex, endIndex);
     } else {
-      uploadBatch(0, files.length - allUploads);
+      uploadBatch(startIndex, files.length - allUploads);
     }
   }
 }
@@ -142,12 +144,12 @@ function handlerOnload(end, xhr) {
   fileToDrag++;
 
   if (allUploads === files.length) {
-    unloading = true;
+    isUnLoading = true;
     fileToDrag = 0;
     container = [];
     return;
   } else if (fileToDrag === end) {
-    unloading = false;
+    isUnLoading = false;
     uploadBatch(end, end + Math.min(3, files.length - allUploads));
   }
 }
