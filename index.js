@@ -1,27 +1,23 @@
 const dropArea = document.querySelector(".container__cart");
 const listSection = document.querySelector(".container__list-section");
 const listContainer = document.querySelector(".container__list");
-const fileSelector = document.querySelector(
-  ".container__caltrap-file-selector"
-);
-const fileSelectorInput = document.querySelector(
-  ".container__caltrap-file-selector-input"
-);
+const fileSelector = document.querySelector(".container__caltrap-file-selector");
+const fileSelectorInput = document.querySelector(".container__caltrap-file-selector-input");
+const files = [];
+
 
 let allUploads = 0;
-
-const files = [];
-let isUnLoading = true;
-let fileToDrag = 0;
-let container = [];
+let isUploading = true;
+let fileToUpload = 0;
+let containerElements = [];
 let startIndex = 0;
 let endIndex = 3;
 
 function retrievalMethod(newFiles) {
   files.push(...newFiles);
   displayFiles();
-  if (isUnLoading) {
-    isUnLoading = false;
+  if (isUploading) {
+    isUploading = false;
 
     if (files.length - allUploads >= endIndex) {
       uploadBatch(startIndex, endIndex);
@@ -117,7 +113,7 @@ function displayFiles() {
 
       li.setAttribute("data-name", file.name);
       listContainer.appendChild(li);
-      container.push(li);
+      containerElements.push(li);
     }
   }
 }
@@ -129,6 +125,7 @@ function typeValidation(fileType) {
     fileType === "application/pdf"
   );
 }
+
 function handleProgress(e, containerFile, progressSpan) {
   if (e.lengthComputable) {
     const percentComplete = ((e.loaded / e.total) * 100).toFixed(2);
@@ -141,15 +138,15 @@ function handlerOnload(end, xhr) {
   if (xhr.status === 200) {
     allUploads++;
   }
-  fileToDrag++;
+  fileToUpload++;
 
   if (allUploads === files.length) {
-    isUnLoading = true;
-    fileToDrag = 0;
-    container = [];
+    isUploading = true;
+    fileToUpload = 0;
+    containerElements = [];
     return;
-  } else if (fileToDrag === end) {
-    isUnLoading = false;
+  } else if (fileToUpload === end) {
+    isUploading = false;
     uploadBatch(end, end + Math.min(endIndex, files.length - allUploads));
   }
 }
@@ -162,7 +159,7 @@ function uploadBatch(start, end) {
 
     data.append("file", files[i]);
     xhr.open("POST", serverEndpoint, true);
-    const progress = container[i];
+    const progress = containerElements[i];
     const containerFile = progress.querySelector(".container__file span");
     const progressSpan = progress.querySelector(".container__progress span");
 
